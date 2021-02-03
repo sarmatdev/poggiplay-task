@@ -1,28 +1,77 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app>
+    <Header />
+    <v-main>
+      <v-container>
+        <base-search-bar
+          solo
+          v-model="query"
+          @keyup.enter="findPackage"
+          @click:append="findPackage"
+          clearable
+          placeholder="Search NPM (press /)"
+          append-icon="mdi-magnify"
+        />
+        <PackagesList
+          :loading="loading"
+          :packages="packages"
+          @showPackageInfo="showPackageModal"
+        />
+      </v-container>
+    </v-main>
+    <PackageModal
+      :item="selectedPackage"
+      :openModal="openPackageModal"
+      @closeModal="closePackageModal"
+    />
+    <Footer />
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+import { mapGetters, mapActions } from 'vuex'
+import Header from './components/common/Header'
+import Footer from './components/common/Footer'
+import PackagesList from './components/common/PackagesList'
+import PackageModal from './components/modals/PackageModal'
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
+    PackagesList,
+    PackageModal,
+    Header,
+    Footer,
+  },
+  data: () => ({
+    query: '',
+    selectedPackage: {},
+    openPackageModal: false,
+    loading: false,
+  }),
+  methods: {
+    ...mapActions(['searchPackages']),
+    findPackage() {
+      if (!this.query) {
+        return
+      }
+      this.loading = true
+      this.searchPackages(this.query).finally(() => {
+        this.loading = false
+      })
+    },
+    showPackageModal(item) {
+      this.openPackageModal = true
+      this.selectedPackage = item.package
+    },
+    closePackageModal() {
+      this.openPackageModal = false
+    },
+  },
+  computed: {
+    ...mapGetters(['packages']),
+    // packages() {
+    //   return this.$store.getters.packages
+    // },
+  },
 }
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
